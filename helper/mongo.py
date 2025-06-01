@@ -1,14 +1,14 @@
-from datetime import datetime 
+from datetime import datetime
+import os 
+from dotenv import load_dotenv
+load_dotenv()
+
+MONGODB_URI = os.getenv('MONGODB_ATLAS_URI')
 def save_incident_to_mongodb(final_report):
     """Save incident analysis to MongoDB Atlas for historical learning"""
     
     # MongoDB Atlas connection string (replace with your actual URI)
-    MONGODB_URI = "mongodb+srv://weixin:lsYHlykdu0BQywrm@cluster0.f9nzm4r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    # lsYHlykdu0BQywrm
 
-    # For demo safety - you can hardcode or use environment variable
-    # MONGODB_URI = os.getenv('MONGODB_URI', 'demo-fallback')
-    
     try:
         from pymongo import MongoClient
         
