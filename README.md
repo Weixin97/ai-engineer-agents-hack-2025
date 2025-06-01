@@ -35,21 +35,8 @@ An AI agent that **evaluates its own work** and **gets smarter through human fee
 - MongoDB Atlas: Incident persistence + learning data (Sponsor ⭐)
 - Python + Jupyter: Interactive development environment
 
-## 🏗️ Technical Architecture
-
-```mermaid
-graph TD
-    A[Alert Received] --> B[Context Gathering]
-    B --> C[LLM Analysis]
-    C --> D[Human Review]
-    D --> E{Human Decision}
-    E -->|Approve| F[Execute Recommendations]
-    E -->|Modify| G[Re-analyze with Feedback]
-    E -->|Escalate| H[Route to Experts]
-    G --> D
-    F --> I[Save to MongoDB]
-    H --> I
-```
+## 🏗️ Technical Agent Flow
+![Alt text](agent_flow.png)
 
 ## Project Structure
 ```
