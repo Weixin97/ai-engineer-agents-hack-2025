@@ -1,7 +1,7 @@
 from datetime import datetime
 import os 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv('./.env')
 
 MONGODB_URI = os.getenv('MONGODB_ATLAS_URI')
 def save_incident_to_mongodb(final_report):
