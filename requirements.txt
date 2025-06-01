@@ -1,0 +1,21 @@
+# Core AI Agent Framework
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-ollama>=0.3.0
+
+# Data Processing
+pandas>=2.2.0
+numpy>=1.26.0
+
+# MongoDB Integration (Hackathon Sponsor)
+pymongo[srv]>=4.6.0
+python-dotenv>=1.1.0
+
+# Jupyter Environment
+jupyter>=1.0.0
+ipykernel>=6.29.0
+ipython>=9.0.0
+
+# Development
+typing-extensions>=4.13.0
