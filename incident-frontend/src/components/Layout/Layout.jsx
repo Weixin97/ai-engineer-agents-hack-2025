@@ -1,11 +1,12 @@
+
 import React from 'react';
 import Header from './Header';
 
 const Layout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       <Header />
-      <main className="max-w-7xl mx-auto px-8 py-6">
+      <main style={{ width: '100%' }}>
         {children}
       </main>
     </div>

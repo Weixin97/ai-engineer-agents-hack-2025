@@ -1,25 +1,69 @@
+// ===============================================
+// 📄 Guaranteed Header Fix - Using Inline Styles
+// ===============================================
+
 import React from 'react';
 import { Bot } from 'lucide-react';
 
 const Header = () => {
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">AI Incident Response</h1>
-              <p className="text-sm text-gray-500">Self-Evaluating Agent • MongoDB Atlas</p>
-            </div>
+    <header style={{ 
+      width: '100%',
+      backgroundColor: 'white', 
+      borderBottom: '1px solid #e5e7eb',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+    }}>
+      <div style={{ 
+        maxWidth: '1280px',
+        margin: '0 auto',
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ 
+            width: '2.5rem', 
+            height: '2.5rem', 
+            backgroundColor: '#111827', 
+            borderRadius: '0.5rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            <Bot style={{ width: '1.5rem', height: '1.5rem', color: 'white' }} />
           </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-sm text-gray-600">LangGraph Online</span>
+          <div>
+            <h1 style={{ 
+              fontSize: '1.25rem', 
+              fontWeight: '600', 
+              color: '#111827',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              AI Incident Response
+            </h1>
+            <p style={{ 
+              fontSize: '0.875rem', 
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.2'
+            }}>
+              Self-Evaluating Agent • MongoDB Atlas
+            </p>
           </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ 
+            width: '0.5rem', 
+            height: '0.5rem', 
+            backgroundColor: '#10b981', 
+            borderRadius: '50%' 
+          }}></div>
+          <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            LangGraph Online
+          </span>
         </div>
       </div>
     </header>
