@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  incident-api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/app/static/data
+    environment:
+      - OLLAMA_BASE_URL=https://host.docker.internal:11434
+      - MONGODB_URI=mongodb+srv://weixin:lsYHlykdu0BQywrm@cluster0.f9nzm4r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+    networks:
+      - incident-network
+    restart: unless-stopped
+
+  incident-frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - OLLAMA_BASE_URL=https://host.docker.internal:11434
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - incident-api
+    networks:
+      - incident-network
