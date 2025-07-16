@@ -73,3 +73,56 @@ ollama pull llama3.2:latest
 jupyter notebook agent.ipynb
 ```
 
+## quick test
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+netstat -an | findstr 8000
+curl http://127.0.0.1:8000/health
+
+curl http://127.0.0.1:8000/api/incidents
+
+### to post incidents
+- Browse http://localhost:8000/docs
+- Click POST /api/incidents
+- Click Try it out
+- Paste JSON in request body
+```
+memory_alert = {
+    "severity": "WARNING",
+    "check_type": "memory_usage_alert",
+    "table": "transaction_processor",
+    "time_period": "2025-07-16T10:30:00",
+    "expected_value": "80%",
+    "actual_value": "95%"
+}
+
+data_corruption = {
+    "severity": "CRITICAL", 
+    "check_type": "cross_table_validation",
+    "table": "user_payment_summary",
+    "time_period": "2025-07-16T08:15:00",
+    "expected_value": "CONSISTENT",
+    "actual_value": "INCONSISTENT"
+}
+
+pipeline_delay = {
+    "severity": "MEDIUM",
+    "check_type": "data_recency_anomaly", 
+    "table": "daily_summary_report",
+    "time_period": "2025-07-16T06:30:00",
+    "expected_value": "2 hours",
+    "actual_value": "8 hours"
+}
+
+
+{
+  "severity": "CRITICAL",
+  "check_type": "report_readiness_check",
+  "table": "daily_transaction_report",
+  "time_period": "2025-01-15T10:00:00",
+  "expected_value": "READY",
+  "actual_value": "NOT_READY"
+}
+```
+
+
