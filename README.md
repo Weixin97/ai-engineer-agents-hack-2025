@@ -125,4 +125,11 @@ pipeline_delay = {
 }
 ```
 
+## frontend
+```
+cd incident-frontend/
+npm install
+npm run dev
+```
+
 
