@@ -40,19 +40,19 @@ An AI agent that **evaluates its own work** and **gets smarter through human fee
 
 ## Project Structure
 ```
-├── agent.ipynb              # 🎬 Main demo notebook
-├── requirements.txt         # 📦 Dependencies
-├── README.md               # 📖 This file
-├── .env.example            # 🔐 Environment template
-├── data/                   # 📊 Mock incident data
+├── agent.ipynb              # Main demo notebook
+├── requirements.txt         # Dependencies
+├── README.md               # This file
+├── .env.example            # Environment template
+├── data/                   # Mock incident data
 │   ├── airflow_logs_*.json
 │   ├── dqc_logs_*.json
 │   └── table_metadata_*.json
-├── helper/                 # 🛠️ Utility functions
+├── helper/                 # Utility functions
 │   ├── agent.py           # Agent orchestration
 │   └── input.py           # Human input handling
 │   ├── mongo.py           # Write data to MongoDB Atlas
-├── example/               # 🎯 Demo scenarios
+├── example/               # Demo scenarios
 │   ├── demo.py           # Scenario definitions
 │   └── sample_alert.py   # Alert examples
 ```
