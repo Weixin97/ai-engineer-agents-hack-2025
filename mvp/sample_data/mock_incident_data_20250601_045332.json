@@ -1,0 +1,537 @@
+{
+  "scenarios": {
+    "data_readiness_failure": {
+      "scenario_description": "Data readiness check failed due to upstream merchant data extraction timeout",
+      "dqc_log": {
+        "id": "8d0ed089705a154172b971453919872b823cf54863632b2b983d241c91d15887",
+        "check_category": "completeness",
+        "check_name": "check_report_readiness",
+        "check_type": "report_readiness_check",
+        "time_period": "2025-06-01T02:53:32.136584",
+        "time_gradient": "day",
+        "expected_value": "READY",
+        "actual_value": "NOT_READY",
+        "severity": "CRITICAL",
+        "err_msg": "report_readiness_check hits CRITICAL. Product: payments, Connection: athena, Database: reporting_db, Table: daily_transaction_report, Check criteria: string_equal, Expected check result is READY, but got check query returned is NOT_READY. Check query result returned detail: NOT_READY. Upstream data pipeline delay detected.",
+        "check_dag_url": "https://airflow-prod.eks.data-platform.prod.c0.paynet.my/api/v1/dags/check_custom_query/dagRuns",
+        "last_updated_at": "2025-06-01T04:53:32.136584",
+        "column_name": "status",
+        "context": "airflow_prod",
+        "product": "payments",
+        "connection": "athena",
+        "database": "reporting_db",
+        "table": "daily_transaction_report",
+        "file_path": "/opt/airflow/dags/check/config/athena.reporting_db.daily_transaction_report.yaml",
+        "check_details": {
+          "query_execution_id": "query_12345678",
+          "upstream_dependencies": [
+            "raw_transactions",
+            "merchant_data"
+          ],
+          "missing_upstream_data": [
+            "merchant_data"
+          ],
+          "last_successful_check": "2025-05-31T14:53:32.136584"
+        }
+      },
+      "airflow_logs": [
+        {
+          "log_id": "d7705242-6981-4b05-bc10-51da4fd5b6d4",
+          "timestamp": "2025-06-01T02:23:32.136584",
+          "level": "INFO",
+          "dag_id": "daily_transaction_pipeline",
+          "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+          "task_id": "extract_merchant_data",
+          "component": "data_extractor",
+          "message": "Starting merchant data extraction from upstream source",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 1,
+            "max_tries": 3,
+            "executor": "KubernetesExecutor",
+            "pod_name": "daily-transaction-pipeline-extract-merchant-data-7891"
+          }
+        },
+        {
+          "log_id": "e8e0d4d4-f917-47cb-b66d-9321be04836d",
+          "timestamp": "2025-06-01T02:28:32.136584",
+          "level": "ERROR",
+          "dag_id": "daily_transaction_pipeline",
+          "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+          "task_id": "extract_merchant_data",
+          "component": "data_extractor",
+          "message": "SQLException: Connection timeout to database after 300 seconds. Unable to extract merchant data.",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 1,
+            "max_tries": 3,
+            "executor": "KubernetesExecutor",
+            "error_code": "CONNECTION_TIMEOUT",
+            "upstream_source": "merchant_database"
+          }
+        },
+        {
+          "log_id": "bc56c6d7-287f-45ba-8b31-32b5f05d6b8d",
+          "timestamp": "2025-06-01T02:33:32.136584",
+          "level": "WARNING",
+          "dag_id": "daily_transaction_pipeline",
+          "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+          "task_id": "validate_transaction_data",
+          "component": "data_validator",
+          "message": "Proceeding with transaction processing without merchant data. Report will be marked as NOT_READY.",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 1,
+            "incomplete_data_sources": [
+              "merchant_data"
+            ],
+            "impact": "downstream_report_readiness"
+          }
+        },
+        {
+          "log_id": "61ca9247-5eef-4e61-bc58-966843f37faf",
+          "timestamp": "2025-06-01T02:48:32.136584",
+          "level": "INFO",
+          "dag_id": "check_custom_query",
+          "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+          "task_id": "report_readiness_check",
+          "component": "dq_operator",
+          "message": "\ud83d\udc1e DEBUG raw_result: [{'upstream_count': '1250', 'downstream_count': '1250', 'missing_count': '1', 'missing_source': 'merchant_data', 'actual_value': 'NOT_READY'}]",
+          "log_type": "task",
+          "metadata": {
+            "check_execution_id": "dq_check_98765",
+            "target_table": "daily_transaction_report"
+          }
+        },
+        {
+          "log_id": "a57a2124-bc6a-42ed-b470-ea1ff45621fe",
+          "timestamp": "2025-06-01T02:53:32.136584",
+          "level": "ERROR",
+          "dag_id": "check_custom_query",
+          "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+          "task_id": "report_readiness_check",
+          "component": "check_validator",
+          "message": "\ud83d\udd34 CRITICAL: Report readiness check failed. Expected: READY, Got: NOT_READY. Upstream data source 'merchant_data' is incomplete.",
+          "log_type": "task",
+          "metadata": {
+            "severity": "CRITICAL",
+            "check_result_id": "8d0ed089705a154172b971453919872b823cf54863632b2b983d241c91d15887",
+            "downstream_impact": [
+              "daily_summary_report",
+              "business_dashboard"
+            ]
+          }
+        }
+      ],
+      "incident_timeline": [
+        {
+          "time": "2025-06-01T02:23:32.136584",
+          "event": "Merchant data extraction started"
+        },
+        {
+          "time": "2025-06-01T02:28:32.136584",
+          "event": "Database connection timeout occurred"
+        },
+        {
+          "time": "2025-06-01T02:33:32.136584",
+          "event": "Pipeline continued without merchant data"
+        },
+        {
+          "time": "2025-06-01T02:53:32.136584",
+          "event": "Data readiness check failed - CRITICAL alert generated"
+        }
+      ]
+    },
+    "data_recency_failure": {
+      "scenario_description": "Data recency check failed due to pipeline delay caused by memory issues during aggregation",
+      "dqc_log": {
+        "id": "bf68d7b696411b86d73504377f158443933a510decb812fede41038fe51ae31b",
+        "check_category": "timeliness",
+        "check_name": "check_data_recency_anomaly",
+        "check_type": "data_recency_anomaly",
+        "time_period": "2025-06-01T00:53:32.136584",
+        "time_gradient": "day",
+        "expected_value": "0",
+        "actual_value": "4.5",
+        "severity": "WARNING",
+        "err_msg": "data_recency_anomaly hits WARNING. Product: payments, Connection: athena, Database: reporting_db, Table: daily_summary_report, Check criteria: max_hour, Expected check result is 0, but got check query returned is 4.5. Check query result returned detail: 4.5. Data is 4.5 hours behind expected schedule.",
+        "check_dag_url": "https://airflow-prod.eks.data-platform.prod.c0.paynet.my/api/v1/dags/check_data_recency/dagRuns",
+        "last_updated_at": "2025-06-01T04:53:32.136584",
+        "column_name": "last_updated_timestamp",
+        "context": "airflow_prod",
+        "product": "payments",
+        "connection": "athena",
+        "database": "reporting_db",
+        "table": "daily_summary_report",
+        "file_path": "/opt/airflow/dags/check/config/athena.reporting_db.daily_summary_report.yaml",
+        "check_details": {
+          "query_execution_id": "query_87654321",
+          "expected_update_time": "2025-05-31T23:53:32.136584",
+          "actual_last_update": "2025-05-31T20:23:32.136584",
+          "delay_hours": 4.5,
+          "threshold_warning": 2.0,
+          "threshold_critical": 6.0
+        }
+      },
+      "airflow_logs": [
+        {
+          "log_id": "175915c7-afd4-41d1-98e4-a23e82a7a414",
+          "timestamp": "2025-05-31T19:53:32.136584",
+          "level": "INFO",
+          "dag_id": "daily_summary_pipeline",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "pipeline_start_trigger",
+          "component": "scheduler",
+          "message": "Daily summary pipeline scheduled execution started",
+          "log_type": "task",
+          "metadata": {
+            "scheduled_time": "2025-05-31T19:53:32.136584",
+            "expected_duration": "45 minutes"
+          }
+        },
+        {
+          "log_id": "ca138302-06e4-42ae-a68e-19365d94918f",
+          "timestamp": "2025-05-31T20:08:32.136584",
+          "level": "WARNING",
+          "dag_id": "daily_summary_pipeline",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "aggregate_transactions",
+          "component": "k8s_kubelet",
+          "message": "Pod daily-summary-pipeline-aggregate-transactions-5678 experiencing high memory usage: 1.8Gi/2.0Gi",
+          "log_type": "kubernetes",
+          "metadata": {
+            "namespace": "airflow-prod",
+            "pod_name": "daily-summary-pipeline-aggregate-transactions-5678",
+            "node": "worker-node-3",
+            "memory_usage_percent": 90
+          }
+        },
+        {
+          "log_id": "945b539f-1665-4265-8eb7-eeb1b57c39a9",
+          "timestamp": "2025-05-31T20:23:32.136584",
+          "level": "ERROR",
+          "dag_id": "daily_summary_pipeline",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "aggregate_transactions",
+          "component": "data_processor",
+          "message": "OutOfMemoryError: Java heap space exceeded during aggregation of 2.5M transaction records",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 1,
+            "max_tries": 3,
+            "records_processed": 2500000,
+            "memory_limit": "2Gi"
+          }
+        },
+        {
+          "log_id": "a2b61647-aa0d-4fe8-81b2-79267d80d566",
+          "timestamp": "2025-05-31T20:28:32.136584",
+          "level": "INFO",
+          "dag_id": "daily_summary_pipeline",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "aggregate_transactions",
+          "component": "task_runner",
+          "message": "Retrying task aggregate_transactions (try 2 of 3) with increased memory allocation",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 2,
+            "memory_allocation": "4Gi",
+            "retry_reason": "OOM_KILLED"
+          }
+        },
+        {
+          "log_id": "e99d13d7-edeb-43ad-94ff-318995510fb4",
+          "timestamp": "2025-05-31T21:53:32.136584",
+          "level": "INFO",
+          "dag_id": "daily_summary_pipeline",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "aggregate_transactions",
+          "component": "data_processor",
+          "message": "Task completed successfully after retry. Summary data generated with delay.",
+          "log_type": "task",
+          "metadata": {
+            "try_number": 2,
+            "final_status": "success",
+            "total_delay_minutes": 120
+          }
+        },
+        {
+          "log_id": "33c2fdc3-d912-4938-81e0-4afcfb20f188",
+          "timestamp": "2025-06-01T00:53:32.136584",
+          "level": "WARNING",
+          "dag_id": "check_data_recency",
+          "run_id": "scheduled__2025-06-01T00:53:32+00:00",
+          "task_id": "data_recency_check",
+          "component": "check_validator",
+          "message": "\u26a0\ufe0f WARNING: Data recency check exceeded warning threshold. Expected freshness: 2 hours, Actual delay: 4.5 hours",
+          "log_type": "task",
+          "metadata": {
+            "severity": "WARNING",
+            "check_result_id": "bf68d7b696411b86d73504377f158443933a510decb812fede41038fe51ae31b",
+            "delay_hours": 4.5,
+            "impact_assessment": "moderate_delay"
+          }
+        }
+      ],
+      "incident_timeline": [
+        {
+          "time": "2025-05-31T19:53:32.136584",
+          "event": "Daily summary pipeline started"
+        },
+        {
+          "time": "2025-05-31T20:08:32.136584",
+          "event": "High memory usage detected"
+        },
+        {
+          "time": "2025-05-31T20:23:32.136584",
+          "event": "OutOfMemoryError occurred"
+        },
+        {
+          "time": "2025-05-31T20:28:32.136584",
+          "event": "Task retry with increased memory"
+        },
+        {
+          "time": "2025-05-31T21:53:32.136584",
+          "event": "Task completed successfully"
+        },
+        {
+          "time": "2025-06-01T00:53:32.136584",
+          "event": "Data recency check failed - WARNING alert generated"
+        }
+      ]
+    }
+  },
+  "table_metadata": {
+    "daily_transaction_report": {
+      "table_info": {
+        "database": "reporting_db",
+        "table_name": "daily_transaction_report",
+        "description": "Daily aggregated transaction report with merchant and payment details",
+        "owner": "data_engineering_team",
+        "created_date": "2023-01-15",
+        "last_modified": "2025-05-31T22:53:32.136584"
+      },
+      "schema": {
+        "columns": [
+          {
+            "name": "transaction_date",
+            "type": "DATE",
+            "nullable": false,
+            "description": "Date of transactions"
+          },
+          {
+            "name": "merchant_id",
+            "type": "VARCHAR(50)",
+            "nullable": false,
+            "description": "Unique merchant identifier"
+          },
+          {
+            "name": "total_amount",
+            "type": "DECIMAL(15,2)",
+            "nullable": false,
+            "description": "Total transaction amount for the day"
+          },
+          {
+            "name": "transaction_count",
+            "type": "BIGINT",
+            "nullable": false,
+            "description": "Number of transactions"
+          },
+          {
+            "name": "success_rate",
+            "type": "DECIMAL(5,2)",
+            "nullable": true,
+            "description": "Success rate percentage"
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR(20)",
+            "nullable": false,
+            "description": "Report readiness status (READY/NOT_READY)"
+          },
+          {
+            "name": "last_updated_timestamp",
+            "type": "TIMESTAMP",
+            "nullable": false,
+            "description": "Last update timestamp"
+          },
+          {
+            "name": "data_sources",
+            "type": "ARRAY<STRING>",
+            "nullable": true,
+            "description": "List of source systems used"
+          }
+        ],
+        "partitions": [
+          "transaction_date"
+        ],
+        "primary_key": [
+          "transaction_date",
+          "merchant_id"
+        ]
+      },
+      "data_lineage": {
+        "upstream_dependencies": [
+          {
+            "source": "raw_transactions",
+            "database": "transaction_db",
+            "update_frequency": "real-time",
+            "critical": true
+          },
+          {
+            "source": "merchant_data",
+            "database": "master_data_db",
+            "update_frequency": "daily",
+            "critical": true
+          }
+        ],
+        "downstream_consumers": [
+          "daily_summary_report",
+          "business_dashboard",
+          "regulatory_reports"
+        ]
+      },
+      "sla_requirements": {
+        "update_schedule": [
+          "06:00",
+          "18:00"
+        ],
+        "max_delay_tolerance": "2 hours",
+        "data_freshness_requirement": "1 hour",
+        "availability_target": "99.5%"
+      },
+      "sample_data": [
+        {
+          "transaction_date": "2025-06-01",
+          "merchant_id": "MERCH001",
+          "total_amount": 125480.5,
+          "transaction_count": 1250,
+          "success_rate": 98.4,
+          "status": "NOT_READY",
+          "last_updated_timestamp": "2025-06-01T00:53:32.136584",
+          "data_sources": [
+            "raw_transactions"
+          ]
+        }
+      ]
+    },
+    "daily_summary_report": {
+      "table_info": {
+        "database": "reporting_db",
+        "table_name": "daily_summary_report",
+        "description": "High-level daily summary metrics for business monitoring",
+        "owner": "business_intelligence_team",
+        "created_date": "2023-01-15",
+        "last_modified": "2025-06-01T01:53:32.136584"
+      },
+      "schema": {
+        "columns": [
+          {
+            "name": "report_date",
+            "type": "DATE",
+            "nullable": false,
+            "description": "Date of the report"
+          },
+          {
+            "name": "total_volume",
+            "type": "DECIMAL(18,2)",
+            "nullable": false,
+            "description": "Total transaction volume"
+          },
+          {
+            "name": "total_transactions",
+            "type": "BIGINT",
+            "nullable": false,
+            "description": "Total number of transactions"
+          },
+          {
+            "name": "unique_merchants",
+            "type": "INTEGER",
+            "nullable": false,
+            "description": "Number of unique merchants"
+          },
+          {
+            "name": "success_rate",
+            "type": "DECIMAL(5,2)",
+            "nullable": false,
+            "description": "Overall success rate"
+          },
+          {
+            "name": "error_count",
+            "type": "BIGINT",
+            "nullable": false,
+            "description": "Total number of errors"
+          },
+          {
+            "name": "avg_transaction_amount",
+            "type": "DECIMAL(10,2)",
+            "nullable": true,
+            "description": "Average transaction amount"
+          },
+          {
+            "name": "last_updated_timestamp",
+            "type": "TIMESTAMP",
+            "nullable": false,
+            "description": "Last update timestamp"
+          },
+          {
+            "name": "data_quality_score",
+            "type": "DECIMAL(3,1)",
+            "nullable": true,
+            "description": "Data quality score (0-10)"
+          }
+        ],
+        "partitions": [
+          "report_date"
+        ],
+        "primary_key": [
+          "report_date"
+        ]
+      },
+      "data_lineage": {
+        "upstream_dependencies": [
+          {
+            "source": "daily_transaction_report",
+            "database": "reporting_db",
+            "update_frequency": "twice daily",
+            "critical": true
+          },
+          {
+            "source": "error_logs",
+            "database": "monitoring_db",
+            "update_frequency": "real-time",
+            "critical": false
+          }
+        ],
+        "downstream_consumers": [
+          "executive_dashboard",
+          "automated_reports",
+          "alerting_system"
+        ]
+      },
+      "sla_requirements": {
+        "update_schedule": [
+          "07:00",
+          "19:00"
+        ],
+        "max_delay_tolerance": "3 hours",
+        "data_freshness_requirement": "2 hours",
+        "availability_target": "99.9%"
+      },
+      "sample_data": [
+        {
+          "report_date": "2025-06-01",
+          "total_volume": 2750680.75,
+          "total_transactions": 8450,
+          "unique_merchants": 324,
+          "success_rate": 97.8,
+          "error_count": 186,
+          "avg_transaction_amount": 325.65,
+          "last_updated_timestamp": "2025-06-01T00:23:32.136584",
+          "data_quality_score": 8.2
+        }
+      ]
+    }
+  },
+  "generation_timestamp": "2025-06-01T04:53:32.137419"
+}

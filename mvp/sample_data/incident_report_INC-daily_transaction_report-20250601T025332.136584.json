@@ -1,0 +1,169 @@
+{
+  "alert": {
+    "severity": "CRITICAL",
+    "check_type": "report_readiness_check",
+    "table": "daily_transaction_report",
+    "time_period": "2025-06-01T02:53:32.136584",
+    "expected_value": "READY",
+    "actual_value": "NOT_READY"
+  },
+  "table_context": {
+    "table_name": "daily_transaction_report",
+    "database": "reporting_db",
+    "owner": "data_engineering_team",
+    "description": "Daily aggregated transaction report with merchant and payment details",
+    "upstream_dependencies": [
+      {
+        "source": "raw_transactions",
+        "database": "transaction_db",
+        "update_frequency": "real-time",
+        "critical": true
+      },
+      {
+        "source": "merchant_data",
+        "database": "master_data_db",
+        "update_frequency": "daily",
+        "critical": true
+      }
+    ],
+    "downstream_consumers": [
+      "daily_summary_report",
+      "business_dashboard",
+      "regulatory_reports"
+    ],
+    "sla_requirements": {
+      "update_schedule": [
+        "06:00",
+        "18:00"
+      ],
+      "max_delay_tolerance": "2 hours",
+      "data_freshness_requirement": "1 hour",
+      "availability_target": "99.5%"
+    }
+  },
+  "related_logs": [
+    {
+      "log_id": "d7705242-6981-4b05-bc10-51da4fd5b6d4",
+      "timestamp": "2025-06-01T02:23:32.136584",
+      "level": "INFO",
+      "dag_id": "daily_transaction_pipeline",
+      "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+      "task_id": "extract_merchant_data",
+      "component": "data_extractor",
+      "message": "Starting merchant data extraction from upstream source",
+      "log_type": "task",
+      "metadata": {
+        "try_number": 1,
+        "max_tries": 3,
+        "executor": "KubernetesExecutor",
+        "pod_name": "daily-transaction-pipeline-extract-merchant-data-7891"
+      }
+    },
+    {
+      "log_id": "e8e0d4d4-f917-47cb-b66d-9321be04836d",
+      "timestamp": "2025-06-01T02:28:32.136584",
+      "level": "ERROR",
+      "dag_id": "daily_transaction_pipeline",
+      "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+      "task_id": "extract_merchant_data",
+      "component": "data_extractor",
+      "message": "SQLException: Connection timeout to database after 300 seconds. Unable to extract merchant data.",
+      "log_type": "task",
+      "metadata": {
+        "try_number": 1,
+        "max_tries": 3,
+        "executor": "KubernetesExecutor",
+        "error_code": "CONNECTION_TIMEOUT",
+        "upstream_source": "merchant_database"
+      }
+    },
+    {
+      "log_id": "bc56c6d7-287f-45ba-8b31-32b5f05d6b8d",
+      "timestamp": "2025-06-01T02:33:32.136584",
+      "level": "WARNING",
+      "dag_id": "daily_transaction_pipeline",
+      "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+      "task_id": "validate_transaction_data",
+      "component": "data_validator",
+      "message": "Proceeding with transaction processing without merchant data. Report will be marked as NOT_READY.",
+      "log_type": "task",
+      "metadata": {
+        "try_number": 1,
+        "incomplete_data_sources": [
+          "merchant_data"
+        ],
+        "impact": "downstream_report_readiness"
+      }
+    },
+    {
+      "log_id": "61ca9247-5eef-4e61-bc58-966843f37faf",
+      "timestamp": "2025-06-01T02:48:32.136584",
+      "level": "INFO",
+      "dag_id": "check_custom_query",
+      "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+      "task_id": "report_readiness_check",
+      "component": "dq_operator",
+      "message": "\ud83d\udc1e DEBUG raw_result: [{'upstream_count': '1250', 'downstream_count': '1250', 'missing_count': '1', 'missing_source': 'merchant_data', 'actual_value': 'NOT_READY'}]",
+      "log_type": "task",
+      "metadata": {
+        "check_execution_id": "dq_check_98765",
+        "target_table": "daily_transaction_report"
+      }
+    },
+    {
+      "log_id": "a57a2124-bc6a-42ed-b470-ea1ff45621fe",
+      "timestamp": "2025-06-01T02:53:32.136584",
+      "level": "ERROR",
+      "dag_id": "check_custom_query",
+      "run_id": "scheduled__2025-06-01T02:53:32+00:00",
+      "task_id": "report_readiness_check",
+      "component": "check_validator",
+      "message": "\ud83d\udd34 CRITICAL: Report readiness check failed. Expected: READY, Got: NOT_READY. Upstream data source 'merchant_data' is incomplete.",
+      "log_type": "task",
+      "metadata": {
+        "severity": "CRITICAL",
+        "check_result_id": "8d0ed089705a154172b971453919872b823cf54863632b2b983d241c91d15887",
+        "downstream_impact": [
+          "daily_summary_report",
+          "business_dashboard"
+        ]
+      }
+    }
+  ],
+  "llm_analysis": {
+    "timestamp": "\"2025-06-01T02:53:32.136584\"",
+    "prompt_used": "\nYou are an expert data engineer analyzing a critical incident. Please analyze the following information and provide insights:\n\nINCIDENT ALERT:\n- Severity: CRITICAL\n- Check Type: report_readiness_check\n- Table: daily_transaction_report\n- Expected Value: READY\n- Actual Value: NOT_READY\n- Time: 2025-06-01T02:53:32.136584\n\nTABLE CONTEXT:\n- Table: daily_transaction_report\n- Database: reporting_db\n- Owner: data_engineering_team\n- Description: Daily aggregated transaction report with merchant and payment details\n- Upstream Dependencies: ['raw_transactions', 'merchant_data']\n- Downstream Consumers: ['daily_summary_report', 'business_dashboard', 'regulatory_reports']\n\nRELATED AIRFLOW LOGS (5 entries):\n\nERROR LOGS (2):\n1. [2025-06-01T02:28:32.136584] data_extractor - extract_merchant_data\n   Message: SQLException: Connection timeout to database after 300 seconds. Unable to extract merchant data.\n\n2. [2025-06-01T02:53:32.136584] check_validator - report_readiness_check\n   Message: \ud83d\udd34 CRITICAL: Report readiness check failed. Expected: READY, Got: NOT_READY. Upstream data source 'merchant_data' is incomplete.\n\n\nWARNING LOGS (1):\n1. [2025-06-01T02:33:32.136584] data_validator - validate_transaction_data\n   Message: Proceeding with transaction processing without merchant data. Report will be marked as NOT_READY.\n\n\nPlease provide a structured analysis with the following:\n\n1. ROOT CAUSE ANALYSIS:\n   - What is the most likely root cause?\n   - What evidence supports this conclusion?\n   - Confidence level (1-10)\n\n2. TIMELINE RECONSTRUCTION:\n   - Key events leading to the failure\n   - Critical decision points\n\n3. IMPACT ASSESSMENT:\n   - Immediate impact on data pipeline\n   - Downstream systems affected\n   - Business impact severity\n\n4. RECOMMENDATIONS:\n   - Immediate actions to resolve\n   - Preventive measures for future\n   - Monitoring improvements\n\n5. ESCALATION DECISION:\n   - Should this be escalated to senior engineers?\n   - Required skill sets for resolution\n\nPlease be specific and actionable in your recommendations.\n",
+    "llm_response": "**ROOT CAUSE ANALYSIS**\n\nBased on the provided information, the most likely root cause of the critical incident is:\n\n1. **Incomplete merchant data extraction**\n2. Evidence supporting this conclusion:\n\t* The first error log from `data_extractor` indicates a connection timeout to the database after 300 seconds, suggesting that the merchant data extraction process failed.\n\t* The second error log from `check_validator` explicitly states that the upstream data source 'merchant_data' is incomplete, which aligns with the root cause identified above.\n3. Confidence level: 9/10\n\n**TIMELINE RECONSTRUCTION**\n\nKey events leading to the failure:\n\n1. **02:28:32**: The `data_extractor` process attempts to extract merchant data from the database but fails due to a connection timeout after 300 seconds.\n2. **02:33:32**: The `data_validator` process proceeds with transaction processing without merchant data, marking the report as NOT_READY.\n3. **02:53:32**: The `check_validator` process runs the report_readiness_check and fails because the upstream 'merchant_data' is incomplete.\n\nCritical decision points:\n\n1. The `data_extractor` process's failure to extract merchant data sets off a chain of events that ultimately leads to the report being marked as NOT_READY.\n2. The `data_validator` process's decision to proceed with transaction processing without merchant data contributes to the report's failure.\n\n**IMPACT ASSESSMENT**\n\nImmediate impact on data pipeline:\n\n* The critical incident causes the daily aggregated transaction report to be marked as NOT_READY, which affects downstream systems that rely on this report.\n* Downstream consumers, such as 'daily_summary_report', 'business_dashboard', and 'regulatory_reports', will not receive accurate or up-to-date information.\n\nBusiness impact severity:\n\n* High: The failure of the report_readiness_check has significant implications for business stakeholders who rely on timely and accurate reports to make informed decisions.\n* Medium: The incident's impact on downstream systems is moderate, as some may be able to continue operating with incomplete data, but this will likely lead to delays or inaccuracies.\n\n**RECOMMENDATIONS**\n\nImmediate actions to resolve:\n\n1. **Investigate and fix the merchant data extraction issue**: Identify the root cause of the connection timeout and implement a solution to ensure that merchant data is extracted successfully.\n2. **Re-run the report_readiness_check with complete upstream data**: Once the merchant data extraction issue is resolved, re-run the check_validator process to ensure that the report is marked as READY.\n\nPreventive measures for future:\n\n1. **Implement monitoring and alerting for connection timeouts**: Set up alerts to notify the team of potential issues before they become critical.\n2. **Regularly review and update dependencies**: Ensure that upstream dependencies, such as 'raw_transactions' and 'merchant_data', are properly maintained and updated.\n\nMonitoring improvements:\n\n1. **Track key performance indicators (KPIs)**: Monitor KPIs related to data extraction, validation, and report readiness to identify potential issues before they become critical.\n2. **Implement logging and error tracking**: Enhance logging and error tracking to provide more detailed insights into the root cause of future incidents.\n\n**ESCALATION DECISION**\n\nThis incident should be escalated to senior engineers for immediate attention due to its critical severity and impact on business operations. The required skill sets for resolution include:\n\n* Expertise in data engineering, particularly in data extraction, validation, and report readiness checks.\n* Knowledge of the underlying database architecture and potential issues related to connection timeouts.\n* Experience with troubleshooting and resolving complex technical issues.\n\nThe escalation decision is based on the following criteria:\n\n* Critical severity: The incident's impact on business operations is high, and immediate attention is required to prevent further delays or inaccuracies.\n* Complexity: The root cause of the incident involves multiple components, including data extraction, validation, and report readiness checks, which requires expertise in data engineering and troubleshooting.",
+    "model_used": "llama3.2:latest",
+    "context_size": 2037,
+    "logs_analyzed": 5
+  },
+  "human_review": {
+    "action": "approve",
+    "feedback": ""
+  },
+  "final_recommendation": {
+    "incident_id": "INC-daily_transaction_report-20250601T025332.136584",
+    "timestamp": "2025-06-01T02:53:32.136584",
+    "severity": "CRITICAL",
+    "table_affected": "daily_transaction_report",
+    "root_cause_analysis": {
+      "primary_cause": "Based on LLM analysis",
+      "human_validation": "approve",
+      "confidence": "High"
+    },
+    "impact_assessment": {
+      "technical_impact": "Standard pipeline impact",
+      "business_impact": "Reporting delays",
+      "downstream_systems": [
+        "daily_summary_report",
+        "business_dashboard",
+        "regulatory_reports"
+      ]
+    },
+    "recommended_actions": "Follow LLM recommendations",
+    "status": "analysis_complete",
+    "escalation_required": false,
+    "human_feedback": ""
+  }
+}
