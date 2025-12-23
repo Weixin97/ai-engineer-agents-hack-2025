@@ -81,6 +81,8 @@ curl http://127.0.0.1:8000/health
 
 curl http://127.0.0.1:8000/api/incidents
 
+curl http://localhost:8000/api/incidents
+
 ### to post incidents
 - Browse http://localhost:8000/docs
 - Click POST /api/incidents

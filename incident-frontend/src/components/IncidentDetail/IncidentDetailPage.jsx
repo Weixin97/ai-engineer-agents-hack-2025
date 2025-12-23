@@ -67,7 +67,7 @@ const IncidentDetailPage = () => {
   // WebSocket connection for real-time updates
   useEffect(() => {
     if (incident && incident.status === 'running') {
-      const ws = new WebSocket(`ws://localhost:8000/ws/incidents/${incident.incident_id}`);
+      const ws = new WebSocket(`ws://localhost:8000/api/incidents/${incident.incident_id}/ws`);
       
       ws.onopen = () => {
         console.log('WebSocket connected for incident analysis');
@@ -147,31 +147,38 @@ const IncidentDetailPage = () => {
     if (!incident || submittingDecision) return;
     
     setSubmittingDecision(true);
-    
+
     try {
-      console.log('Submitting decision:', { decision, feedback: humanFeedback });
+      const response = await fetch(`http://localhost:8000/api/incidents/${incident.incident_id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: decision,
+          feedback: humanFeedback || 'No feedback provided',
+          escalation_reason: decision === 'escalate' ? humanFeedback : null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit review');
+      }
+
+      const result = await response.json();
+      console.log('Review submitted:', result);
       
-      // Since we don't have /decision endpoint, we'll simulate the decision
-      // In a real implementation, you would call your actual API here
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show success feedback
-      alert(`Decision "${decision.toUpperCase()}" submitted successfully!\n\nFeedback: ${humanFeedback || 'No feedback provided'}`);
-      
-      // Reset feedback
+      // Refresh incident data
+      refetch();
       setHumanFeedback('');
-      
-      // In a real implementation, you might update the incident status
-      // For now, we'll just show the success message
       
     } catch (error) {
       console.error('Decision submission error:', error);
-      alert('Failed to submit decision. Please try again.');
+      alert('Failed to submit decision: ' + error.message);
     } finally {
       setSubmittingDecision(false);
     }
+    
   };
 
   // Extract data from incident API response

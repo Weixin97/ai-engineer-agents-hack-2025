@@ -9,14 +9,20 @@ from typing_extensions import Literal
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, END
 from langchain_ollama import ChatOllama
+from langchain_anthropic import ChatAnthropic
 from app.core.database import DataManager
 from app.api.websocket import websocket_manager
 
 data_manager = DataManager()
-model = ChatOllama(
-    model="llama3.2:latest",
+# model = ChatOllama(
+#     model="llama3.2:latest",
+#     temperature=0.1,
+#     base_url= "http://localhost:11434" # os.getenv("OLLAMA_BASE_URL"),
+# )
+model = ChatAnthropic(
+    model="claude-sonnet-4-20250514",
     temperature=0.1,
-    base_url= "http://localhost:11434" # os.getenv("OLLAMA_BASE_URL"),
+    api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 
 class IncidentState(TypedDict):
@@ -255,7 +261,7 @@ Please be specific and actionable in your recommendations.
             "timestamp": datetime.now().isoformat(),
             "prompt_used": analysis_prompt,
             "llm_response": response.content,
-            "model_used": "llama3.2:latest",
+            "model_used": "claude-sonnet-4-20250514",
             "context_size": len(analysis_prompt),
             "logs_analyzed": len(related_logs),
             "is_rerun": is_rerun
