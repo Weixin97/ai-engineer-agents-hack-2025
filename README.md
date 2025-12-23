@@ -89,6 +89,7 @@ curl http://localhost:8000/api/incidents
 - Click Try it out
 - Paste JSON in request body
 ```
+# modify
 memory_alert = {
     "severity": "WARNING",
     "check_type": "memory_usage_alert",
@@ -116,7 +117,7 @@ pipeline_delay = {
     "actual_value": "8 hours"
 }
 
-
+# approve
 {
   "severity": "CRITICAL",
   "check_type": "report_readiness_check",
