@@ -208,18 +208,32 @@ const IncidentDetailPage = () => {
   };
 
   const getConfidenceScore = () => {
-    // Extract from LLM analysis
-    if (incident?.llm_analysis?.confidence) {
-      return incident.llm_analysis.confidence;
-    }
-    
-    // Parse from LLM response text
+
     const llmResponse = incident?.llm_analysis?.llm_response || '';
-    const confidenceMatch = llmResponse.match(/confidence[^:]*:\s*(\d+)/i);
-    
+  
+    // 查找 "Confidence Level: X/10" 格式
+    const confidenceMatch = llmResponse.match(/confidence\s*level[:\s]*(\d+)\s*\/\s*10/i);
     if (confidenceMatch) {
-      return parseInt(confidenceMatch[1]);
+      return parseInt(confidenceMatch[1]) * 10;
     }
+    
+    // 查找 "Confidence: X/10" 格式
+    const simpleMatch = llmResponse.match(/confidence[:\s]*(\d+)\s*\/\s*10/i);
+    if (simpleMatch) {
+      return parseInt(simpleMatch[1]) * 10;
+    }
+    // Extract from LLM analysis
+    // if (incident?.llm_analysis?.confidence) {
+    //   return incident.llm_analysis.confidence;
+    // }
+    
+    // // Parse from LLM response text
+    // const llmResponse = incident?.llm_analysis?.llm_response || '';
+    // const confidenceMatch = llmResponse.match(/confidence[^:]*:\s*(\d+)/i);
+    
+    // if (confidenceMatch) {
+    //   return parseInt(confidenceMatch[1]);
+    // }
     
     // Default confidence for completed analysis
     return analysisComplete ? 90 : 75;
@@ -228,84 +242,181 @@ const IncidentDetailPage = () => {
   const getEvidenceFromAnalysis = () => {
     // Try to extract evidence from LLM response
     const llmResponse = incident?.llm_analysis?.llm_response || '';
+
+    if (!llmResponse) {
+      return ['Analysis in progress...'];
+    }
+
+    const evidence = [];
+
+    const evidenceSection = llmResponse.match(/\*\*(?:supporting\s+)?evidence[^*]*\*\*[:\s]*([\s\S]*?)(?=\n\n\*\*|\n##|$)/i);
     
-    if (llmResponse) {
-      // Look for evidence bullet points or numbered lists
-      const evidenceLines = llmResponse
+    if (evidenceSection) {
+      const lines = evidenceSection[1]
         .split('\n')
-        .filter(line => {
-          const trimmed = line.trim();
-          return (trimmed.startsWith('•') || 
-                 trimmed.startsWith('-') || 
-                 trimmed.startsWith('*') ||
-                 /^\d+\./.test(trimmed)) &&
-                 (trimmed.includes('evidence') || 
-                  trimmed.includes('found') || 
-                  trimmed.includes('detected') ||
-                  trimmed.includes('connection') ||
-                  trimmed.includes('pool') ||
-                  trimmed.includes('timeout'));
-        })
-        .map(line => line.replace(/^[•\-*\d\.]\s*/, '').trim())
-        .slice(0, 3);
-      
-      if (evidenceLines.length > 0) {
-        return evidenceLines;
+        .map(line => line.replace(/^[-*•]\s*/, '').trim())
+        .filter(line => line.length > 10 && !line.startsWith('#'));
+      evidence.push(...lines.slice(0, 3));
+    }
+    
+    // 如果没找到，查找 Root Cause 下的 bullet points
+    if (evidence.length === 0) {
+      const rootCauseSection = llmResponse.match(/root\s*cause[^#]*?((?:[-*•].+\n?)+)/i);
+      if (rootCauseSection) {
+        const lines = rootCauseSection[1]
+          .split('\n')
+          .map(line => line.replace(/^[-*•]\s*/, '').trim())
+          .filter(line => line.length > 10);
+        evidence.push(...lines.slice(0, 3));
       }
     }
     
+    // 提取关键句子
+    if (evidence.length === 0) {
+      const keyPhrases = llmResponse.match(/\*\*[^*]+\*\*[:\s]*[^*\n]+/g);
+      if (keyPhrases) {
+        evidence.push(...keyPhrases.slice(0, 3).map(p => p.replace(/\*\*/g, '')));
+      }
+    }
+    
+    return evidence.length > 0 ? evidence : ['Analysis completed - see details below'];
+
+      
+    // if (llmResponse) {
+    //   // Look for evidence bullet points or numbered lists
+    //   const evidenceLines = llmResponse
+    //     .split('\n')
+    //     .filter(line => {
+    //       const trimmed = line.trim();
+    //       return (trimmed.startsWith('•') || 
+    //              trimmed.startsWith('-') || 
+    //              trimmed.startsWith('*') ||
+    //              /^\d+\./.test(trimmed)) &&
+    //              (trimmed.includes('evidence') || 
+    //               trimmed.includes('found') || 
+    //               trimmed.includes('detected') ||
+    //               trimmed.includes('connection') ||
+    //               trimmed.includes('pool') ||
+    //               trimmed.includes('timeout'));
+    //     })
+    //     .map(line => line.replace(/^[•\-*\d\.]\s*/, '').trim())
+    //     .slice(0, 3);
+      
+    //   if (evidenceLines.length > 0) {
+    //     return evidenceLines;
+    //   }
+    // }
+    
     // Default evidence based on incident data
-    return [
-      'Database connection timeout errors in airflow logs',
-      'Connection pool utilization at 100%',
-      'Similar pattern identified in historical incident INC-2024-892'
-    ];
+    // return [
+    //   'Database connection timeout errors in airflow logs',
+    //   'Connection pool utilization at 100%',
+    //   'Similar pattern identified in historical incident INC-2024-892'
+    // ];
   };
 
   const getRootCauseAnalysis = () => {
     // Extract from LLM analysis response
     const llmResponse = incident?.llm_analysis?.llm_response || '';
+    if (!llmResponse) {
+      return 'Analysis in progress...';
+    }
+  
+    const primaryMatch = llmResponse.match(/\*\*(?:most\s+likely\s+|primary\s+)?root\s*cause[:\s]*\*\*\s*([^\n*]+)/i);
+    if (primaryMatch) {
+      return primaryMatch[1].trim();
+    }
     
-    if (llmResponse) {
-      // Look for root cause section
-      const rootCauseMatch = llmResponse.match(/(?:root\s+cause|cause)[^:]*:(.+?)(?:\n\n|\n(?:[A-Z]|$))/is);
+    // 查找 ## ROOT CAUSE section
+    const sectionMatch = llmResponse.match(/##\s*\d*\.?\s*root\s*cause[^\n]*\n+([\s\S]*?)(?=\n##|\n\*\*confidence)/i);
+    if (sectionMatch) {
+      const paragraphs = sectionMatch[1]
+        .split('\n\n')
+        .map(p => p.trim())
+        .filter(p => p.length > 20 && !p.startsWith('**'));
       
-      if (rootCauseMatch) {
-        return rootCauseMatch[1].trim();
-      }
-      
-      // Look for first substantial paragraph that might be root cause
-      const paragraphs = llmResponse.split('\n\n').filter(p => p.trim().length > 50);
       if (paragraphs.length > 0) {
-        return paragraphs[0].trim();
+        return paragraphs[0].replace(/\*\*/g, '');
       }
     }
     
-    // Default root cause based on incident type
-    const checkType = incident?.alert?.check_type || '';
-    
-    if (checkType.includes('memory')) {
-      return '**Insufficient memory allocation or deallocation**: The actual value of 95% exceeds the expected value of 80%, indicating a potential issue with memory management within the transaction processor. Evidence supporting this conclusion: * The log message from \'mem-002\' indicates that "Performance degradation likely" due to excessive memory usage, suggesting a critical issue. * The upstream dependencies on Kafka streams and real-time updates imply that the system is under heavy load, which could lead to memory bottlenecks.';
+    // Fallback
+    const fallbackMatch = llmResponse.match(/root\s*cause[:\s]+([^#\n][^\n]+)/i);
+    if (fallbackMatch) {
+      return fallbackMatch[1].trim().replace(/\*\*/g, '');
     }
     
-    return 'Database connection pool exhausted. Analysis indicates insufficient connection limits and potential connection leaks in the transaction processor service leading to resource starvation and system performance degradation.';
+    return 'See full analysis for details';
+    
+    // if (llmResponse) {
+    //   // Look for root cause section
+    //   const rootCauseMatch = llmResponse.match(/(?:root\s+cause|cause)[^:]*:(.+?)(?:\n\n|\n(?:[A-Z]|$))/is);
+      
+    //   if (rootCauseMatch) {
+    //     return rootCauseMatch[1].trim();
+    //   }
+      
+    //   // Look for first substantial paragraph that might be root cause
+    //   const paragraphs = llmResponse.split('\n\n').filter(p => p.trim().length > 50);
+    //   if (paragraphs.length > 0) {
+    //     return paragraphs[0].trim();
+    //   }
+    // }
+    
+    // // Default root cause based on incident type
+    // const checkType = incident?.alert?.check_type || '';
+    
+    // if (checkType.includes('memory')) {
+    //   return '**Insufficient memory allocation or deallocation**: The actual value of 95% exceeds the expected value of 80%, indicating a potential issue with memory management within the transaction processor. Evidence supporting this conclusion: * The log message from \'mem-002\' indicates that "Performance degradation likely" due to excessive memory usage, suggesting a critical issue. * The upstream dependencies on Kafka streams and real-time updates imply that the system is under heavy load, which could lead to memory bottlenecks.';
+    // }
+    
+    // return 'Database connection pool exhausted. Analysis indicates insufficient connection limits and potential connection leaks in the transaction processor service leading to resource starvation and system performance degradation.';
   };
 
   const getRecommendations = () => {
     // Extract from LLM analysis
     const llmResponse = incident?.llm_analysis?.llm_response || '';
+
+    if (!llmResponse) {
+      return 'Analysis in progress...';
+    }
     
-    if (llmResponse) {
-      // Look for recommendations section
-      const recommendationMatch = llmResponse.match(/(?:recommendation|action)[^:]*:(.+?)(?:\n\n|\n(?:[A-Z]|$))/is);
+    // 查找 "Immediate Actions" section
+    const immediateMatch = llmResponse.match(/\*\*immediate\s*actions[^*]*\*\*[:\s]*([\s\S]*?)(?=\n\n\*\*|\n###|\n##|$)/i);
+    if (immediateMatch) {
+      const actions = immediateMatch[1]
+        .split('\n')
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*\*\*([^*]+)\*\*.*/, '$1').trim())
+        .slice(0, 3);
       
-      if (recommendationMatch) {
-        return recommendationMatch[1].trim();
+      if (actions.length > 0) {
+        return actions.join('; ');
       }
     }
     
-    // Default recommendations
-    return 'Database connection pool exhausted. Restart merchant-db service and increase connection limits.';
+    // 查找 ## RECOMMENDATIONS section
+    const sectionMatch = llmResponse.match(/##\s*\d*\.?\s*recommendation[^\n]*\n+([\s\S]*?)(?=\n##|$)/i);
+    if (sectionMatch) {
+      const numberedItem = sectionMatch[1].match(/\d+\.\s*([^\n]+)/);
+      if (numberedItem) {
+        return numberedItem[1].replace(/\*\*/g, '').trim();
+      }
+    }
+    
+    return 'Review full analysis for detailed recommendations';
+    
+    // if (llmResponse) {
+    //   // Look for recommendations section
+    //   const recommendationMatch = llmResponse.match(/(?:recommendation|action)[^:]*:(.+?)(?:\n\n|\n(?:[A-Z]|$))/is);
+      
+    //   if (recommendationMatch) {
+    //     return recommendationMatch[1].trim();
+    //   }
+    // }
+    
+    // // Default recommendations
+    // return 'Database connection pool exhausted. Restart merchant-db service and increase connection limits.';
   };
 
   const getDataSources = () => {
